@@ -1,8 +1,8 @@
-import multiparty from 'multiparty';
+import { NextResponse } from 'next/server';
 import path from 'path';
-import fs from 'fs';
 import { writeFile } from 'fs/promises';
-import addQuadrants from '../../lib/addQuadrants';
+import multiparty from 'multiparty';
+import fs from 'fs';
 
 export const config = {
   api: {
@@ -28,25 +28,16 @@ export default async function handler(req, res) {
       const buffer = await fs.promises.readFile(file.path);
       const filename = Date.now() + '-' + file.originalFilename.replace(/\s+/g, '_');
       const uploadPath = path.join(process.cwd(), 'public/uploads', filename);
-      const mapPath = path.join(process.cwd(), 'public/maps', filename);
 
       try {
         // Write the file to the uploads directory
         await writeFile(uploadPath, buffer);
 
-        // Add quadrants to the image
-        const processedBuffer = await addQuadrants(uploadPath);
-        await writeFile(mapPath, processedBuffer);
-        
-        // Clean up the uploaded file
-        //fs.unlinkSync(uploadPath);
-        await
-        // Return the processed image
-        res.setHeader('Content-Type', 'image/png');
-        res.status(200).send(processedBuffer);
+        // Return success message
+        return res.status(201).json({ message: 'File uploaded successfully', filename });
       } catch (error) {
         console.log('Error occurred:', error);
-        return res.status(500).json({ message: 'Failed to process image', error });
+        return res.status(500).json({ message: 'Failed to save file', error });
       }
     });
   } else {
