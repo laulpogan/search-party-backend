@@ -38,7 +38,7 @@ export default async function handler(req, res) {
 
         try {
           // Make request to OpenAI for transcription
-          const openaiApiKey = 'your-openai-api-key'; // Replace with your OpenAI API key
+          const openaiApiKey = 'sk-proj-ezH9fgjzvhPmhRKOWfbdT3BlbkFJxiVWNg2JNk5Wv4CQlC3m'; // Replace with your OpenAI API key
           const openaiApiUrl = 'https://api.openai.com/v1/audio/transcriptions';
           
           const formData = new FormData();
