@@ -1,10 +1,8 @@
-// pages/api/transcribe.js
-
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-import { createClient } from '@supabase/supabase-js';
-import { GPT } from '@openai/whisper-gpt';
+import { supabase } from '../../lib/supabaseClient';
 import fs from 'fs';
+import axios from 'axios'; // Import Axios
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -16,11 +14,6 @@ const upload = multer({
     },
   }),
 });
-
-const supabaseUrl = 'https://your-supabase-url.supabase.co';
-const supabaseKey = 'your-supabase-key';
-const supabase = createClient(supabaseUrl, supabaseKey);
-const gpt = new GPT({/* your GPT configuration */});
 
 export const config = {
   api: {
@@ -43,25 +36,47 @@ export default async function handler(req, res) {
 
         const { path } = req.file;
 
-        // Example: Use Whisper GPT for transcription (replace with your actual GPT implementation)
-        const transcription = await gpt.transcribeAudio(path);
+        try {
+          // Make request to OpenAI for transcription
+          const openaiApiKey = 'your-openai-api-key'; // Replace with your OpenAI API key
+          const openaiApiUrl = 'https://api.openai.com/v1/audio/transcriptions';
+          
+          const formData = new FormData();
+          formData.append('file', fs.createReadStream(path));
 
-        // Store transcription in Supabase
-        const { data, error } = await supabase.from('transcriptions').insert([
-          { text: transcription },
-        ]);
+          const response = await axios.post(openaiApiUrl, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              'Authorization': `Bearer ${openaiApiKey}`,
+            },
+          });
 
-        if (error) {
-          throw new Error(`Failed to store transcription: ${error.message}`);
+          if (response.data && response.data.transcription) {
+            const { transcription } = response.data.transcription;
+
+            // Store transcription in Supabase
+            const { data, error } = await supabase.from('transcriptions').insert([
+              { text: transcription },
+            ]);
+
+            if (error) {
+              throw new Error(`Failed to store transcription: ${error.message}`);
+            }
+
+            res.status(200).json({ success: true });
+          } else {
+            throw new Error('Failed to transcribe audio');
+          }
+        } catch (error) {
+          console.error('Error processing transcription:', error);
+          res.status(500).json({ success: false, error: error.message });
+        } finally {
+          // Clean up uploaded file if necessary
+          fs.unlinkSync(path);
         }
-
-        // Optional: Clean up uploaded file if necessary
-        fs.unlinkSync(path);
-
-        res.status(200).json({ success: true });
       });
     } catch (error) {
-      console.error('Error processing transcription:', error);
+      console.error('Error processing request:', error);
       res.status(500).json({ success: false, error: error.message });
     }
   } else {
