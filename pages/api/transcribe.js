@@ -49,11 +49,13 @@ async function handler(req, res) {
         });
 
         const transcription = openAiResponse.data.text;
-        console.log(transcription)
 
-        const { data, error } = await supabase.from('transcriptions').insert([
-          { text: transcription },
-        ]);
+        const { data, error: uploadError } = await supabase.storage
+        .from('uploads')
+        .upload(transcription,{
+          cacheControl: '3600',
+          upsert: false,
+        });
 
         if (error) {
           throw new Error(`Failed to store transcription: ${error.message}`);
