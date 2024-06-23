@@ -1,4 +1,4 @@
-import callRAG from '../../src/app/api/RAG/route.ts'
+import callRAG from '../../lib/callRag';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {

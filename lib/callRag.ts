@@ -3,7 +3,7 @@ import {
   StreamingTextResponse,
   createStreamDataTransformer,
 } from "ai";
-import generateSpeechAndUpload from "../../../../lib/audioStreaming";
+import generateSpeechAndUpload from "./audioStreaming";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { HttpResponseOutputParser } from "langchain/output_parsers";
@@ -12,8 +12,6 @@ import { JSONLoader } from "langchain/document_loaders/fs/json";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { CharacterTextSplitter } from "langchain/text_splitter";
-
-const path = require("path");
 
 const loader = new JSONLoader("src/data/person.json", [
   "/missing_person",
@@ -49,14 +47,14 @@ const formatMessage = (message: VercelChatMessage) => {
 };
 
 const TEMPLATE = `You are a search and rescue operation officer giving out instructions based on information and context received. You
-proceed and give out instructions to people from different sectors according to the state:
-==============================
-Context: {context}
-==============================
-Current conversation: {conversation_history}
-
-Missing Person: {person}
-Operation Officer:`;
+  proceed and give out instructions to people from different sectors according to the state:
+  ==============================
+  Context: {context}
+  ==============================
+  Current conversation: {conversation_history}
+  
+  Missing Person: {person}
+  Operation Officer:`;
 
 export async function callRAG(req: Request) {
   console.log(req);
@@ -120,3 +118,5 @@ export async function callRAG(req: Request) {
     return Response.json({ error: e.message }, { status: e.status ?? 500 });
   }
 }
+
+export default callRAG;
