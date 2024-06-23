@@ -55,7 +55,7 @@ export default async function handler(req, res) {
 
         console.log('Original image uploaded:', filename, data); // Logging
 
-        const { publicURL: originalURL } = await supabase.storage.from('uploads').getPublicUrl(filename);
+        const originalURL  = "https://wgqsvhcvbvxabkdrredc.supabase.co/storage/v1/object/public/uploads/" + filename;
         console.log('Original image URL:', originalURL); // Logging
 
         // Add quadrants to the image
@@ -77,14 +77,14 @@ export default async function handler(req, res) {
 
         console.log('Processed image uploaded:', processedFilename, processedData); // Logging
 
-        const { publicURL: processedURL } = await supabase.storage.from('processed-uploads').getPublicUrl(processedFilename);
+        const processedURL  = "https://wgqsvhcvbvxabkdrredc.supabase.co/storage/v1/object/public/processed-uploads/" + processedFilename;
         console.log('Processed image URL:', processedURL); // Logging
-
+            
         // Return the public URLs of the original and processed images
         res.status(200).json({
           message: 'File uploaded successfully',
-          originalURL,
-          processedURL,
+          originalURL: originalURL,
+          processedURL: processedURL
         });
       } catch (error) {
         console.error('Error occurred:', error);
