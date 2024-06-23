@@ -1,5 +1,5 @@
 import multer from 'multer';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../lib/supabaseClient';
 import fs from 'fs';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
