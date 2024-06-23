@@ -120,4 +120,3 @@ export async function callRAG(req: Request) {
     return Response.json({ error: e.message }, { status: e.status ?? 500 });
   }
 }
-export default callRAG;
