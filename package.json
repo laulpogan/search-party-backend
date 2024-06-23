@@ -11,6 +11,7 @@
   "dependencies": {
     "@cartesia/cartesia-js": "^1.0.0-alpha.4",
     "@supabase/supabase-js": "^2.43.5",
+    "axios": "^1.7.2",
     "bcryptjs": "^2.4.3",
     "formidable": "^3.5.1",
     "groq-sdk": "^0.4.0",
