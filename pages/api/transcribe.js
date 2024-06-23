@@ -1,58 +1,56 @@
-import { Configuration, OpenAIApi } from 'openai';
-import multer from 'multer';
-import fs from 'fs';
-import nextConnect from 'next-connect';
-import { supabase } from '../../lib/supabaseClient'; // Adjust the path as per your project structure
+const express = require('express');
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
+const axios = require('axios');
+const { createClient } = require('@supabase/supabase-js');
+const { GPT } = require('@openai/whisper-gpt');
+const fs = require('fs');
 
-const upload = multer({ dest: 'uploads/' });
+const app = express();
+const port = 3000;
 
-const apiRoute = nextConnect({
-  onError(error, req, res) {
-    res.status(501).json({ error: `Sorry something Happened! ${error.message}` });
-  },
-  onNoMatch(req, res) {
-    res.status(405).json({ error: `Method '${req.method}' Not Allowed` });
-  },
+const supabaseUrl = 'https://your-supabase-url.supabase.co';
+const supabaseKey = 'your-supabase-key';
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+const gpt = new GPT({});
+
+// Middleware to handle file uploads
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, './uploads/');
+    },
+    filename: function (req, file, cb) {
+      cb(null, `${uuidv4()}_${file.originalname}`);
+    },
+  }),
 });
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-const openai = new OpenAIApi(configuration);
-
-apiRoute.use(upload.single('audio'));
-
-apiRoute.post(async (req, res) => {
-  const filePath = req.file.path;
-
+// Endpoint to handle audio transcription
+app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
   try {
-    const response = await openai.createTranscription(fs.createReadStream(filePath), {
-      model: 'whisper-1', // Use appropriate Whisper model here
-      language: 'en', // Set the language if necessary
-    });
+    const { path } = req.file;
 
-    const transcription = response.data.text;
+    // Example: Use Whisper GPT for transcription (replace with your actual GPT implementation)
+    const transcription = await gpt.transcribeAudio(path);
 
     // Store transcription in Supabase
-    const { data, error } = await supabase.from('transcriptions').insert([{ transcription }]);
+    const { data, error } = await supabase.from('transcriptions').insert([
+      { text: transcription },
+    ]);
 
     if (error) {
-      throw new Error('Failed to insert transcription into Supabase');
+      throw new Error(`Failed to store transcription: ${error.message}`);
     }
 
-    res.status(200).json({ success: true });
+    res.json({ success: true });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to transcribe audio or store transcription' });
-  } finally {
-    fs.unlinkSync(filePath); // Clean up the uploaded file
+    console.error('Error processing transcription:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-export const config = {
-  api: {
-    bodyParser: false, // Disallow body parsing, use multer instead
-  },
-};
-
-export default apiRoute;
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});
