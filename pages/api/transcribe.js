@@ -1,5 +1,5 @@
 import multer from 'multer';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import fs from 'fs';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
@@ -14,10 +14,6 @@ const upload = multer({
     },
   }),
 });
-
-const supabaseUrl = 'https://your-supabase-url.supabase.co';
-const supabaseKey = 'your-supabase-key';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const config = {
   api: {
