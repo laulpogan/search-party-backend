@@ -4,6 +4,13 @@ import fs from 'fs';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { resolve } from 'path';
+
+const express = require('express');
+const cors = require('cors');
+const app = express();
+
+app.use(cors()); // Enable CORS for all routes
+
 const upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
@@ -22,6 +29,7 @@ export const config = {
 };
 
 async function handler(req, res) {
+    console.log('req.method', req.method)
   if (req.method === 'POST') {
     upload.single('audio')(req, res, async function (err) {
       if (err instanceof multer.MulterError) {
@@ -32,39 +40,40 @@ async function handler(req, res) {
         return res.status(500).json({ error: 'Something went wrong' });
       }
 
-      const { path } = resolve(__dirname, './speech.mp3')
+      const { path } = req.file;
       try {
-        const openAiResponse = await axios.post('https://api.openai.com/v1/audio/transcriptions', {
-          file: fs.createReadStream(path),
-          model: 'whisper-1', // Replace with your specific model
-        })
-        }catch(error){    
-            
-            console.error('Error processing transcription:', error);
-            res.status(500).json({ success: false, error: error.message });
-            };
+        const formData = new FormData();
+        formData.append('audio', fs.createReadStream(path), {
+          contentType: 'audio/x-wav', // Adjust MIME type if necessary
+          name: 'audio.wav',
+        });
+
+        const openAiResponse = await axios.get('https://api.openai.com/v1/audio/transcriptions', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`, // Replace with your OpenAI API key
+          },
+        });
 
         const transcription = openAiResponse.data.text;
-        
-        try {
-            const { data: transcriptionData, error: transcriptionError } = await supabase
-            .from('audio')
-            .insert([{ transcription }]);
-    } catch (error) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
-        }
 
-        if (error) {
-          throw new Error(`Failed to store transcription: ${error.message}`);
+        const { data: transcriptionData, error: transcriptionError } = await supabase
+          .from('audio')
+          .insert([{ transcription }]);
+
+        if (transcriptionError) {
+          throw new Error(`Failed to store transcription: ${transcriptionError.message}`);
         }
 
         fs.unlinkSync(path); // Clean up uploaded file if necessary
 
         res.status(200).json({ success: true, transcription });
-      });
-    }
-   else {
+      } catch (error) {
+        console.error('Error processing transcription:', error);
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+  } else {
     res.setHeader('Allow', ['POST']);
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }

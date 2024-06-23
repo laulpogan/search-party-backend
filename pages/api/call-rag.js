@@ -7,6 +7,7 @@ export default async function handler(req, res) {
     }
   
     try {
+      console.log('req.body', req.body)
       const { text } = req.body;
   
       if (!text) {
