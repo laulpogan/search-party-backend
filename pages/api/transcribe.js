@@ -50,12 +50,17 @@ async function handler(req, res) {
 
         const transcription = openAiResponse.data.text;
 
+        try {
         const { data, error: uploadError } = await supabase.storage
-        .from('uploads')
+        .from('audio')
         .upload(transcription,{
           cacheControl: '3600',
           upsert: false,
         });
+    } catch (error) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+        }
 
         if (error) {
           throw new Error(`Failed to store transcription: ${error.message}`);
