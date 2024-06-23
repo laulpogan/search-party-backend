@@ -49,6 +49,7 @@ async function handler(req, res) {
         });
 
         const transcription = openAiResponse.data.text;
+        console.log(transcription)
 
         const { data, error } = await supabase.from('transcriptions').insert([
           { text: transcription },
