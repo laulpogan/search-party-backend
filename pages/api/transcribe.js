@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import fs from 'fs';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
-
+import { resolve } from 'path';
 const upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
@@ -32,7 +32,7 @@ async function handler(req, res) {
         return res.status(500).json({ error: 'Something went wrong' });
       }
 
-      const { path } = req.file;
+      const { path } = resolve(__dirname, './speech.mp3')
       try {
         const openAiResponse = await axios.post('https://api.openai.com/v1/audio/transcriptions', {
           file: fs.createReadStream(path),
