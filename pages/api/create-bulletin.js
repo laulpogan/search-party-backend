@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabaseClient';
+import generateSpeechAndUpload from "../../lib/audioStreaming";
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
@@ -7,10 +8,12 @@ export default async function handler(req, res) {
     if (!content) {
       return res.status(400).json({ error: 'content is required' });
     }
+    const uploadResult = await generateSpeechAndUpload(content);
 
+    const fileURL = "https://wgqsvhcvbvxabkdrredc.supabase.co/storage/v1/object/public/audio/"+uploadResult.path;
     const { data, error } = await supabase
       .from('bulletins')
-      .insert([{content}])
+      .insert([{content: content, audio_link: fileURL}])
       .select('*');
 
     if (error) {
