@@ -37,11 +37,6 @@ async function handler(req, res) {
         const openAiResponse = await axios.post('https://api.openai.com/v1/audio/transcriptions', {
           file: fs.createReadStream(path),
           model: 'whisper-1', // Replace with your specific model
-        }, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          },
         });
 
         const transcription = openAiResponse.data.text;
