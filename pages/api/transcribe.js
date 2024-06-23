@@ -52,7 +52,7 @@ async function handler(req, res) {
         
         try {
             const { data: transcriptionData, error: transcriptionError } = await supabase
-            .from('transcriptions')
+            .from('audio')
             .insert([{ transcription }]);
     } catch (error) {
         console.error('Upload error:', uploadError);
